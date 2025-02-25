@@ -86,44 +86,63 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class UserScreen extends ConsumerWidget {
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-
+class UserListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final users = ref.watch(usersProvider);
+    final users = ref.watch(userProvider);
+
     return Scaffold(
-      appBar: AppBar(title: Text('User Management')),
-      body: Column(
-        children: [
-          TextField(controller: nameController, decoration: InputDecoration(labelText: 'Name')),
-          TextField(controller: emailController, decoration: InputDecoration(labelText: 'Email')),
-          ElevatedButton(
-            onPressed: () {
-              ref.read(usersProvider.notifier).addUser(nameController.text, emailController.text);
-              nameController.clear();
-              emailController.clear();
-            },
-            child: Text('Add User'),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: users.length,
-              itemBuilder: (context, index) {
-                final user = users[index];
-                return ListTile(
-                  title: Text(user.name),
-                  subtitle: Text(user.email),
-                  trailing: IconButton(
-                    icon: Icon(Icons.delete),
-                    onPressed: () => ref.read(usersProvider.notifier).deleteUser(user.id),
-                  ),
+      appBar: AppBar(title: Text("User Management")),
+      body: ListView.builder(
+        itemCount: users.length,
+        itemBuilder: (context, index) {
+          final user = users[index];
+
+          return ListTile(
+            title: Text(user.name),
+            subtitle: Text(user.email),
+            trailing: IconButton(
+              icon: Icon(Icons.edit),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    final nameController = TextEditingController(text: user.name);
+                    final emailController = TextEditingController(text: user.email);
+
+                    return AlertDialog(
+                      title: Text("Update User"),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextField(controller: nameController, decoration: InputDecoration(labelText: "Name")),
+                          TextField(controller: emailController, decoration: InputDecoration(labelText: "Email")),
+                        ],
+                      ),
+                      actions: [
+                        TextButton(
+                          child: Text("Cancel"),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        TextButton(
+                          child: Text("Update"),
+                          onPressed: () {
+                            ref.read(userProvider.notifier).updateUser(
+                              user.id,
+                              nameController.text,
+                              emailController.text,
+                            );
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ],
+                    );
+                  },
                 );
               },
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
